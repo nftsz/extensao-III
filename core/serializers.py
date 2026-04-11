@@ -39,7 +39,7 @@ class ItemComandaSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         if instance.comanda.status == 'FECHADA':
-            raise serializers.ValidationError("Comanda fechada.")
+            raise serializers.ValidationError("Comanda fechada. Nao pode ser atualizada")
 
         nova_qtd = validated_data.get('quantidade', instance.quantidade)
 
