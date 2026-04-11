@@ -39,7 +39,8 @@ class ItemComandaSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         if instance.comanda.status == 'FECHADA':
-            raise serializers.ValidationError("Comanda fechada. Nao pode ser atualizada")
+            raise serializers.ValidationError(
+                "Comanda fechada. Nao pode ser atualizada")
 
         nova_qtd = validated_data.get('quantidade', instance.quantidade)
 
@@ -50,12 +51,20 @@ class ItemComandaSerializer(serializers.ModelSerializer):
         produto = instance.produtos
 
         with transaction.atomic():
-            produto = Produto.objects.select_for_update().get(id=produto.id)
+            produto = Produto.objects.select_for_update().get(id=instance.produtos.id)
 
-            if diferenca > 0 and produto.estoque < diferenca:
-                raise serializers.ValidationError("Estoque insuficiente.")
+            diferenca = nova_qtd - instance.quantidade
 
-            produto.estoque -= diferenca
+            # aumento
+            if diferenca > 0:
+                if produto.estoque < diferenca:
+                    raise serializers.ValidationError("Estoque insuficiente.")
+                produto.estoque -= diferenca
+
+            # redução
+            elif diferenca < 0:
+                produto.estoque += abs(diferenca)
+
             produto.save()
 
             instance.quantidade = nova_qtd
@@ -106,22 +115,19 @@ class ItemComandaCreateSerializer(serializers.ModelSerializer):
             comanda = validated_data['comanda']
             quantidade = validated_data['quantidade']
 
-            # verifica se já existe item desse produto na comanda
             item_existente = ItemComanda.objects.filter(
                 comanda=comanda,
                 produtos=produto
             ).first()
 
             if item_existente:
-                nova_qtd = item_existente.quantidade + quantidade
-
                 if produto.estoque < quantidade:
                     raise serializers.ValidationError("Estoque insuficiente.")
 
                 produto.estoque -= quantidade
                 produto.save()
 
-                item_existente.quantidade = nova_qtd
+                item_existente.quantidade += quantidade
                 item_existente.save()
 
                 return item_existente
@@ -171,12 +177,12 @@ class ComandaSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         novo_status = validated_data.get('status', instance.status)
 
-        # ❌ impedir fechar comanda vazia
+        # impedir fechar comanda vazia
         if novo_status == 'FECHADA' and not instance.itens.exists():
             raise serializers.ValidationError(
                 "Comanda vazia não pode ser fechada.")
 
-        # ❌ impedir editar comanda já fechada
+        # impedir editar comanda já fechada
         if instance.status == 'FECHADA':
             raise serializers.ValidationError("Comanda já está fechada.")
 
