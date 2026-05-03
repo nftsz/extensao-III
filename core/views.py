@@ -75,11 +75,11 @@ class ComandaDetailView(generics.RetrieveUpdateDestroyAPIView):
         return super().destroy(request, *args, **kwargs)
 
 
-# 🔥 FECHAR COMANDA
+# FECHAR COMANDA
 
 class FecharComandaView(generics.UpdateAPIView):
     queryset = Comanda.objects.all()
-    serializer_class = ComandaSerializer  # 🔥 adiciona isso
+    serializer_class = ComandaSerializer  
 
     def update(self, request, *args, **kwargs):
         comanda = self.get_object()
@@ -97,7 +97,7 @@ class FecharComandaView(generics.UpdateAPIView):
         return Response({"msg": "Comanda fechada"})
 
 
-# 🔥 CANCELAR COMANDA
+# CANCELAR COMANDA
 
 class CancelarComandaView(generics.DestroyAPIView):
     queryset = Comanda.objects.all()

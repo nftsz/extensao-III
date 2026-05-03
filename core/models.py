@@ -1,10 +1,6 @@
 from django.db import models
 
 # Create your models here.
-class Base(models.Model):
-    pass
-
-
 class Garcom(models.Model):
     nome = models.CharField(max_length=150)
 
@@ -29,12 +25,12 @@ class Comanda(models.Model):
         ('FECHADA', 'Fechada')
     ]
 
-    identificador = models.CharField(max_length=100)
-    numero = models.CharField(max_length=10, unique=True, blank=True)
+    identificador = models.CharField(max_length=100) # nome da mesa ou do cliente
+    numero = models.CharField(max_length=10, unique=True, blank=True) # numero da comanda
 
     status = models.CharField(
         max_length=10, choices=STATUS_CHOICES, default='ABERTA')
-    total = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    total = models.DecimalField(max_digits=10, decimal_places=2, default=0) # valor subtotal de itens
 
     criado_em = models.DateTimeField(auto_now_add=True)
     fechado_em = models.DateTimeField(null=True, blank=True)
