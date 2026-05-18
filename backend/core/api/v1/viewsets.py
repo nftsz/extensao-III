@@ -1,115 +1,98 @@
+from datetime import date
+
+from django.db.models import Sum
 from rest_framework import viewsets, status
+from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.decorators import action
-from rest_framework.exceptions import ValidationError
 
-from django.db import transaction
-from django.utils import timezone
-
-from models import Garcom, Produto, Comanda, ItemComanda
+from core.models import Produto, LoteDoacao, Distribuicao, Perca
 from .serializers import (
-    GarcomSerializer,
     ProdutoSerializer,
-    ComandaSerializer,
-    ItemComandaSerializer,
-    ItemComandaCreateSerializer
+    LoteDoacaoSerializer,
+    DistribuicaoSerializer,
+    PercaSerializer
 )
 
-
-# =========================
-# GARÇOM
-# =========================
-
-class GarcomViewSet(viewsets.ModelViewSet):
-    queryset = Garcom.objects.all()
-    serializer_class = GarcomSerializer
-
-
-# =========================
-# PRODUTO
-# =========================
 
 class ProdutoViewSet(viewsets.ModelViewSet):
     queryset = Produto.objects.all()
     serializer_class = ProdutoSerializer
 
 
-# =========================
-# COMANDA
-# =========================
+class LoteDoacaoViewSet(viewsets.ModelViewSet):
+    queryset = LoteDoacao.objects.all()
+    serializer_class = LoteDoacaoSerializer
+    
 
-class ComandaViewSet(viewsets.ModelViewSet):
-    serializer_class = ComandaSerializer
 
-    def get_queryset(self):
-        queryset = Comanda.objects.all().order_by('-id')
-        status_param = self.request.query_params.get('status')
+class PercaViewSet(viewsets.ModelViewSet):
+    queryset = Perca.objects.all()
+    serializer_class = PercaSerializer
 
-        if status_param:
-            queryset = queryset.filter(status=status_param)
 
-        return queryset
+class DistribuicaoAPIView(APIView):
+    def post(self, request):
+        serializer = DistribuicaoSerializer(data=request.data)
 
-    def destroy(self, request, *args, **kwargs):
-        comanda = self.get_object()
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=400)
 
-        if comanda.itens.exists():
-            return Response(
-                {"erro": "Comanda com itens não pode ser excluída. Feche a comanda."},
-                status=status.HTTP_400_BAD_REQUEST
+        produto_id = serializer.validated_data["produto"]
+        quantidade = serializer.validated_data["quantidade"]
+
+        lotes = LoteDoacao.objects.filter(
+            produto_id=produto_id,
+            data_expiracao__gte=date.today()
+        ).order_by("data_expiracao")
+
+        restante = quantidade
+
+        for lote in lotes:
+            disponivel = lote.available_quantity
+
+            if disponivel <= 0:
+                continue
+
+            retirar = min(disponivel, restante)
+
+            Distribuicao.objects.create(
+                lote=lote,
+                quantidade=retirar
             )
 
-        return super().destroy(request, *args, **kwargs)
+            restante -= retirar
 
-    # 🔥 FECHAR COMANDA
-    @action(detail=True, methods=['post'])
-    def fechar(self, request, pk=None):
-        comanda = self.get_object()
+            if restante == 0:
+                break
 
-        if comanda.status == 'FECHADA':
-            raise ValidationError("Já fechada")
+        if restante > 0:
+            return Response(
+                {"erro": "Estoque insuficiente"},
+                status=400
+            )
 
-        if not comanda.itens.exists():
-            raise ValidationError("Comanda vazia")
-
-        comanda.status = 'FECHADA'
-        comanda.fechado_em = timezone.now()
-        comanda.save()
-
-        return Response({"msg": "Comanda fechada"})
-
-    # 🔥 CANCELAR COMANDA
-    @action(detail=True, methods=['delete'])
-    def cancelar(self, request, pk=None):
-        comanda = self.get_object()
-
-        if comanda.itens.exists():
-            raise ValidationError("Comanda não está vazia")
-
-        comanda.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(
+            {"mensagem": "Distribuição realizada"},
+            status=201
+        )
 
 
-# =========================
-# ITEM DA COMANDA
-# =========================
+class DashboardAPIView(APIView):
+    def get(self, request):
+        total_recebido = LoteDoacao.objects.aggregate(
+            total=Sum("quantidade")
+        )["total"] or 0
 
-class ItemComandaViewSet(viewsets.ModelViewSet):
-    queryset = ItemComanda.objects.all()
+        total_distribuido = Distribuicao.objects.aggregate(
+            total=Sum("quantidade")
+        )["total"] or 0
 
-    def get_serializer_class(self):
-        if self.action == 'create':
-            return ItemComandaCreateSerializer
-        return ItemComandaSerializer
+        total_perdido = Perca.objects.aggregate(
+            total=Sum("quantidade")
+        )["total"] or 0
 
-    def perform_destroy(self, instance):
-        if instance.comanda.status == 'FECHADA':
-            raise ValidationError("Comanda fechada.")
-
-        with transaction.atomic():
-            produto = Produto.objects.select_for_update().get(id=instance.produto.id)
-
-            produto.estoque += instance.quantidade
-            produto.save()
-
-            instance.delete()
+        return Response({
+            "total_recebido": total_recebido,
+            "total_distribuido": total_distribuido,
+            "total_perdido": total_perdido
+        })

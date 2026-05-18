@@ -2,19 +2,21 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
 from .viewsets import (
-    GarcomViewSet,
     ProdutoViewSet,
-    ComandaViewSet,
-    ItemComandaViewSet,
+    LoteDoacaoViewSet,
+    PercaViewSet,
+    DistribuicaoAPIView,
+    DashboardAPIView
 )
 
-# Router principal
 router = DefaultRouter()
-router.register(r'garcons', GarcomViewSet)
-router.register(r'produtos', ProdutoViewSet)
-router.register(r'comandas', ComandaViewSet)
-router.register(r'itens', ItemComandaViewSet)
+
+router.register("produtos", ProdutoViewSet)
+router.register("lotes", LoteDoacaoViewSet)
+router.register("percas", PercaViewSet)
 
 urlpatterns = [
-    path('', include(router.urls)),
+    path("", include(router.urls)),
+    path("distribuir/", DistribuicaoAPIView.as_view()),
+    path("dashboard/", DashboardAPIView.as_view()),
 ]
