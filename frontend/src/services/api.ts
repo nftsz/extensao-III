@@ -27,12 +27,15 @@ export interface DashboardData {
 export const estoqueService = {
   // Produtos
   getProdutos: () => api.get<Produto[]>('produtos/'),
-  createProduto: (produto: Produto) => api.post<Produto>('produtos/', produto),
+  getProduto: (id: number) => api.get<Produto>(`produtos/${id}/`), 
+  createProduto: (produto: Omit<Produto, 'id'>) => api.post<Produto>('produtos/', produto),
+  updateProduto: (id: number, dados: Partial<Produto>) => api.patch<Produto>(`produtos/${id}/`, dados),
+  deleteProduto: (id: number) => api.delete(`produtos/${id}/`),
   
   // Dashboard
   getDashboard: () => api.get<DashboardData>('dashboard/'),
 
-  // Distribuição (A lógica do FEFO)
+  // Distribuição
   distribuir: (produtoId: number, quantidade: number) => 
     api.post('distribuir/', { produto: produtoId, quantidade }),
 };
