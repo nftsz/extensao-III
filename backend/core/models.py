@@ -1,16 +1,18 @@
 from django.db import models
 from django.db.models import Sum
 
-
 class Produto(models.Model):
     nome = models.CharField(max_length=100)
     categoria = models.CharField(max_length=50)
     unidade = models.CharField(max_length=20)  # kg, unidade, litro
+
+    ativo = models.BooleanField(default=True)
+
     criado_em = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.nome
-
 
 class LoteDoacao(models.Model):
     produto = models.ForeignKey(Produto, on_delete=models.CASCADE)

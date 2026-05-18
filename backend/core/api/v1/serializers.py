@@ -7,7 +7,6 @@ class ProdutoSerializer(serializers.ModelSerializer):
         model = Produto
         fields = "__all__"
 
-
 class LoteDoacaoSerializer(serializers.ModelSerializer):
     available_quantity = serializers.ReadOnlyField()
 

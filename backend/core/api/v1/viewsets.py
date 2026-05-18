@@ -13,6 +13,7 @@ from .serializers import (
     PercaSerializer
 )
 
+
 class ProdutoViewSet(viewsets.ModelViewSet):
     queryset = Produto.objects.all()
     serializer_class = ProdutoSerializer
@@ -21,6 +22,7 @@ class ProdutoViewSet(viewsets.ModelViewSet):
 class LoteDoacaoViewSet(viewsets.ModelViewSet):
     queryset = LoteDoacao.objects.all()
     serializer_class = LoteDoacaoSerializer
+    
 
 
 class PercaViewSet(viewsets.ModelViewSet):
