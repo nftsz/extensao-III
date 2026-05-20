@@ -17,6 +17,13 @@ export interface Produto {
   ativo?: boolean;
 }
 
+export interface LoteDoacao {
+  id?: number;
+  produto: number; // ID do produto
+  quantidade: number;
+  data_validade: string; // ISO date string
+}
+
 export interface DashboardData {
   total_recebido: number;
   total_distribuido: number;

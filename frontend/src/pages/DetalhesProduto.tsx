@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { estoqueService, type Produto } from "../services/api";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Plus } from "lucide-react";
 import { Button } from "@heroui/react";
 
 export function DetalhesProduto() {
@@ -25,18 +25,14 @@ export function DetalhesProduto() {
   }, [id]);
 
   if (loading) {
-    return (
-      <div className="p-8 text-center text-gray-500 font-medium">
-        Carregando detalhes do produto...
-      </div>
-    );
+    return <div className="p-8 text-center text-white/60 font-medium">Carregando detalhes do produto...</div>;
   }
 
   if (erro || !produto) {
     return (
-      <div className="p-8 text-center">
-        <p className="text-red-500 font-medium mb-4">{erro || "Produto não encontrado."}</p>
-        <Button variant="outline" onPress={() => navigate("/produtos")}>
+      <div className="p-8 text-center bg-bg-card rounded-xl shadow-xl max-w-md mx-auto mt-10 text-text-main">
+        <p className="text-red-600 font-bold mb-4">{erro || "Produto não encontrado."}</p>
+        <Button className="bg-btn-cancel text-white font-bold" onPress={() => navigate("/produtos")}>
           Voltar para Produtos
         </Button>
       </div>
@@ -45,58 +41,60 @@ export function DetalhesProduto() {
 
   return (
     <div className="w-full h-full relative">
-      <div className="flex items-center gap-4 mb-6">
-        <Button isIconOnly variant="outline" onPress={() => navigate("/produtos")}>
-          <ArrowLeft size={20} />
-        </Button>
-        <h2 className="text-2xl font-bold text-gray-800">
-          Detalhes: {produto.nome}
-        </h2>
+      {/* Caminho/Breadcrumbs */}
+      <div className="mb-2 text-sm text-white/60">Doações &gt; Estoque &gt; Detalhes</div>
+
+      {/* Faixa de Aviso FEFO (Igualzinha à da imagem do layout) */}
+      <div className="bg-bg-notice text-white/90 px-5 py-3 rounded-xl mb-6 text-sm font-medium shadow-sm border border-white/5">
+        Os itens serão classificados automaticamente por data de validade (FEFO).
       </div>
 
-      {/* Container principal - removido max-w-4xl e aumentado padding */}
-      <div className="bg-white shadow-sm rounded-xl border border-gray-100 p-8 flex flex-col gap-6 w-full">
-        {/* Informações Básicas - Grid ajustado */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="flex items-center gap-4 mb-6">
+        <Button isIconOnly className="bg-white/10 text-white hover:bg-white/20" onPress={() => navigate("/produtos")}>
+          <ArrowLeft size={20} />
+        </Button>
+        <h2 className="text-3xl font-bold text-white">Detalhes: {produto.nome}</h2>
+      </div>
+
+      {/* Cartão Principal Claro */}
+      <div className="bg-bg-card text-text-main shadow-2xl rounded-xl p-8 flex flex-col gap-6 w-full">
+        {/* Informações em Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-black/5 p-5 rounded-xl">
           <div>
-            <p className="text-sm text-gray-500 font-medium mb-1">Categoria</p>
-            <p className="text-lg text-gray-900">{produto.categoria}</p>
+            <p className="text-xs text-text-main/60 font-bold uppercase tracking-wider mb-1">Categoria</p>
+            <p className="text-lg font-semibold text-text-main">{produto.categoria}</p>
           </div>
           <div>
-            <p className="text-sm text-gray-500 font-medium mb-1">Unidade de Medida</p>
-            <p className="text-lg text-gray-900 capitalize">{produto.unidade}</p>
+            <p className="text-xs text-text-main/60 font-bold uppercase tracking-wider mb-1">Unidade de Medida</p>
+            <p className="text-lg font-semibold text-text-main capitalize">{produto.unidade}</p>
           </div>
           <div>
-            <p className="text-sm text-gray-500 font-medium mb-1">Status</p>
-            <span
-              className={`inline-block px-3 py-1 rounded-md text-sm font-bold ${
-                produto.ativo ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
-              }`}
-            >
-              {produto.ativo ? "Ativo" : "Inativo"}
+            <p className="text-xs text-text-main/60 font-bold uppercase tracking-wider mb-1">Status do Registro</p>
+            <span className={`inline-block mt-1 px-3 py-1 rounded-md text-xs font-bold ${produto.ativo ? "bg-green-200 text-green-800" : "bg-red-200 text-red-800"}`}>
+              {produto.ativo ? "Ativo no Sistema" : "Inativo"}
             </span>
           </div>
         </div>
 
-        <hr className="border-gray-100" />
+        <hr className="border-black/10" />
 
-        {/* Seção de Lotes - Agora centralizada e maior */}
+        {/* Seção de Lotes */}
         <div>
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-bold text-gray-800">Lotes em Estoque</h3>
-            <Button size="sm" variant="primary">
-              Adicionar Lote
+            <h3 className="text-xl font-bold text-brand">Lotes em Estoque</h3>
+            <Button className="bg-btn-primary text-white font-bold shadow-md hover:opacity-90 transition-opacity">
+              <Plus size={16} /> Adicionar Lote
             </Button>
           </div>
           
-          {/* Container maior e centralizado */}
-          <div className="bg-gray-50 rounded-lg p-12 text-center border border-dashed border-gray-200 min-h-[300px] flex items-center justify-center">
+          {/* Caixa tracejada interna para listagem vazia */}
+          <div className="bg-white/50 rounded-xl p-12 text-center border-2 border-dashed border-black/10 min-h-[250px] flex items-center justify-center">
             <div>
-              <p className="text-gray-500 text-lg">
+              <p className="text-text-main font-semibold text-lg">
                 A listagem de lotes e acompanhamento de validade aparecerão aqui.
               </p>
-              <p className="text-gray-400 text-sm mt-2">
-                Use o botão "Adicionar Lote" para começar
+              <p className="text-text-main/60 text-sm mt-2">
+                Use o botão "Adicionar Lote" para iniciar o controle FEFO deste produto.
               </p>
             </div>
           </div>
