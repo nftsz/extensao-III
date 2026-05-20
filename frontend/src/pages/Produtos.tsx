@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 
 export function Produtos() {
   const navigate = useNavigate();
+
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<number | null>(null);
@@ -161,7 +162,7 @@ export function Produtos() {
                       <div className="flex gap-2 items-center justify-center">
                         <Button size="sm" className="bg-black/5 text-text-main hover:bg-black/10" onPress={() => produto.id && handleVer(produto.id)}>Ver</Button>
                         <Button size="sm" className="bg-black/5 text-text-main hover:bg-black/10" onPress={() => handleEditar(produto)}>Editar</Button>
-                        <Button size="sm" className={`min-w-[85px] ${produto.ativo ? 'bg-black/5 text-text-main' : 'bg-black/5 text-text-main'}`} onPress={() => handleToggleAtivo(produto)}>
+                        <Button size="sm" className={`min-w-[85px] ${produto.ativo ? 'bg-black/5 text-text-main hover:bg-black/10' : 'bg-black/5 text-text-main hover:bg-black/10'}`} onPress={() => handleToggleAtivo(produto)}>
                           {actionLoading === produto.id ? "..." : produto.ativo ? "Desativar" : "Ativar"}
                         </Button>
                         <Button isIconOnly size="sm" className="bg-red-100 text-red-600 hover:bg-red-200" onPress={() => produto.id && handleExcluir(produto.id)}>
@@ -208,8 +209,8 @@ export function Produtos() {
               </div>
 
               <div className="flex justify-end gap-3 mt-6">
-                <Button className="bg-btn-cancel text-white font-bold px-5" onPress={handleFecharModal} type="button">Cancelar</Button>
-                <Button className="bg-btn-primary text-white font-bold px-5" type="submit" isDisabled={isSubmitting}>
+                <Button className="bg-btn-cancel text-white font-bold px-5 shadow-md hover:opacity-80 transition-opacity" onPress={handleFecharModal} type="button">Cancelar</Button>
+                <Button className="bg-btn-primary text-white font-bold px-5 shadow-md hover:opacity-90 transition-opacity" type="submit" isDisabled={isSubmitting}>
                   {isSubmitting ? "Salvando..." : editingProdutoId ? "Atualizar" : "Salvar Produto"}
                 </Button>
               </div>

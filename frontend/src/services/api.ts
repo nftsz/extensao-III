@@ -19,9 +19,10 @@ export interface Produto {
 
 export interface LoteDoacao {
   id?: number;
-  produto: number; // ID do produto
+  produto: number; // FK id do produto
   quantidade: number;
-  data_validade: string; // ISO date string
+  data_expiracao: string; 
+  recebido_em?: string;
 }
 
 export interface DashboardData {
@@ -39,6 +40,12 @@ export const estoqueService = {
   updateProduto: (id: number, dados: Partial<Produto>) => api.patch<Produto>(`produtos/${id}/`, dados),
   deleteProduto: (id: number) => api.delete(`produtos/${id}/`),
   
+  // Lotes de Doação
+  getLotes: () => api.get<LoteDoacao[]>('lotes/'),
+  getLotesPorProduto: (produtoId: number) => api.get<LoteDoacao[]>(`lotes/?produto=${produtoId}`),
+  createLote: (lote: Omit<LoteDoacao, 'id' | 'recebido_em'>) => api.post<LoteDoacao>('lotes/', lote),
+  updateLote: (id: number, dados: Partial<Omit<LoteDoacao, 'id' | 'recebido_em'>>) => api.patch<LoteDoacao>(`lotes/${id}/`, dados),
+  deleteLote: (id: number) => api.delete(`lotes/${id}/`),
   // Dashboard
   getDashboard: () => api.get<DashboardData>('dashboard/'),
 
