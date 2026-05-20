@@ -160,7 +160,7 @@ export function Produtos() {
                     </Table.Cell>
                     <Table.Cell>
                       <div className="flex gap-2 items-center justify-center">
-                        <Button size="sm" className="bg-black/5 text-text-main hover:bg-black/10" onPress={() => produto.id && handleVer(produto.id)}>Ver</Button>
+                        <Button size="sm" className="bg-black/5 text-text-main hover:bg-black/10" onPress={() => produto.id && handleVer(produto.id)}>Lotes</Button>
                         <Button size="sm" className="bg-black/5 text-text-main hover:bg-black/10" onPress={() => handleEditar(produto)}>Editar</Button>
                         <Button size="sm" className={`min-w-[85px] ${produto.ativo ? 'bg-black/5 text-text-main hover:bg-black/10' : 'bg-black/5 text-text-main hover:bg-black/10'}`} onPress={() => handleToggleAtivo(produto)}>
                           {actionLoading === produto.id ? "..." : produto.ativo ? "Desativar" : "Ativar"}

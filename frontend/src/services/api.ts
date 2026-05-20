@@ -20,7 +20,10 @@ export interface Produto {
 export interface LoteDoacao {
   id?: number;
   produto: number; // FK id do produto
+  produto_nome?: string;
+  produto_unidade?: string;
   quantidade: number;
+  available_quantity?: number; 
   data_expiracao: string; 
   recebido_em?: string;
 }
@@ -29,6 +32,14 @@ export interface DashboardData {
   total_recebido: number;
   total_distribuido: number;
   total_perdido: number;
+}
+
+export interface Perca {
+  id?: number;
+  lote: number; // FK id do lote
+  quantidade: number;
+  motivo: string;
+  criado_em?: string;
 }
 
 // Serviços organizados por entidade
@@ -49,6 +60,9 @@ export const estoqueService = {
   // Dashboard
   getDashboard: () => api.get<DashboardData>('dashboard/'),
 
+  // Perdas
+  getPerdas: () => api.get<Perca[]>('percas/'),
+  createPerca: (perca: Omit<Perca, 'id' | 'criado_em'>) => api.post<Perca>('percas/', perca),
   // Distribuição
   distribuir: (produtoId: number, quantidade: number) => 
     api.post('distribuir/', { produto: produtoId, quantidade }),

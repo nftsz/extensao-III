@@ -1,6 +1,6 @@
 import { type ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Package, LayoutDashboard, Send, Settings } from 'lucide-react';
+import { Package, LayoutDashboard, Send, Settings, Warehouse } from 'lucide-react';
 
 interface LayoutProps {
   children: ReactNode;
@@ -10,8 +10,8 @@ export function Layout({ children }: LayoutProps) {
   const location = useLocation();
 
   const menuItems = [
-    { path: '/', label: 'Dashboard', icon: <LayoutDashboard size={20} /> },
     { path: '/produtos', label: 'Doações', icon: <Package size={20} /> },
+    { path: '/', label: 'Dashboard', icon: <LayoutDashboard size={20} /> },
     { path: '/distribuicao', label: 'Distribuição', icon: <Send size={20} /> },
     { path: '/configuracoes', label: 'Configurações', icon: <Settings size={20} /> },
   ];
