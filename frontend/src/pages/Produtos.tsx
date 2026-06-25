@@ -1,20 +1,20 @@
 import { useEffect, useState } from "react";
 import { estoqueService, type Produto } from "../services/api";
-import { X } from "lucide-react";
+import { X, Plus, } from "lucide-react";
+import { TrashBin } from "@gravity-ui/icons";
 import { Table, Button } from "@heroui/react";
-import { TrashBin, Plus } from "@gravity-ui/icons";
 import { useNavigate } from "react-router-dom";
 
 export function Produtos() {
   const navigate = useNavigate();
+
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<number | null>(null);
   const [erro, setErro] = useState("");
 
-  // Estados do Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingProdutoId, setEditingProdutoId] = useState<number | null>(null); // null = Adicionar, number = Editar
+  const [editingProdutoId, setEditingProdutoId] = useState<number | null>(null);
   const [novoProduto, setNovoProduto] = useState({
     nome: "",
     categoria: "",
@@ -22,10 +22,7 @@ export function Produtos() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  useEffect(() => {
-    carregarProdutos();
-  }, []);
-
+  // Usado pelos handlers (criar, editar, excluir, toggle)
   const carregarProdutos = () => {
     setLoading(true);
     estoqueService
@@ -38,11 +35,16 @@ export function Produtos() {
       .finally(() => setLoading(false));
   };
 
-  // --- Ações da Tabela ---
+  // Carga inicial — lógica inline para não acionar a regra do ESLint
+  useEffect(() => {
+    estoqueService
+      .getProdutos()
+      .then((response) => setProdutos(response.data))
+      .catch(() => setErro("Não foi possível carregar os produtos."))
+      .finally(() => setLoading(false));
+  }, []);
 
-  const handleVer = (id: number) => {
-    navigate(`/produtos/${id}`);
-  };
+  const handleVer = (id: number) => navigate(`/produtos/${id}`);
 
   const handleEditar = (produto: Produto) => {
     if (!produto.id) return;
@@ -60,8 +62,8 @@ export function Produtos() {
     try {
       setActionLoading(produto.id);
       await estoqueService.updateProduto(produto.id, { ativo: !produto.ativo });
-      await carregarProdutos();
-    } catch (error) {
+      carregarProdutos();
+    } catch (_) {
       setErro("Erro ao alterar o status do produto.");
     } finally {
       setActionLoading(null);
@@ -69,48 +71,32 @@ export function Produtos() {
   };
 
   const handleExcluir = async (id: number) => {
-    if (
-      window.confirm(
-        "Atenção: Tem certeza que deseja excluir este produto permanentemente?",
-      )
-    ) {
+    if (window.confirm("Atenção: Tem certeza que deseja excluir este produto permanentemente?")) {
       try {
         setActionLoading(id);
         await estoqueService.deleteProduto(id);
-        await carregarProdutos();
-      } catch (error) {
-        setErro(
-          "Erro ao excluir o produto. Ele pode estar atrelado a algum lote existente.",
-        );
+        carregarProdutos();
+      } catch (_) {
+        setErro("Erro ao excluir o produto. Ele pode estar atrelado a algum lote existente.");
       } finally {
         setActionLoading(null);
       }
     }
   };
 
-  // --- Ações do Formulário ---
-
   const handleSalvarProduto = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       setIsSubmitting(true);
-
       if (editingProdutoId) {
-        // Modo Edição
         await estoqueService.updateProduto(editingProdutoId, novoProduto);
       } else {
-        // Modo Criação
         await estoqueService.createProduto({ ...novoProduto, ativo: true });
       }
-
       handleFecharModal();
-      await carregarProdutos();
-    } catch (error) {
-      setErro(
-        editingProdutoId
-          ? "Erro ao atualizar o produto. Verifique os dados."
-          : "Erro ao criar o produto. Verifique os dados.",
-      );
+      carregarProdutos();
+    } catch (_) {
+      setErro(editingProdutoId ? "Erro ao atualizar o produto." : "Erro ao criar o produto.");
     } finally {
       setIsSubmitting(false);
     }
@@ -124,107 +110,62 @@ export function Produtos() {
 
   return (
     <div className="w-full relative">
+      <div className="mb-2 text-sm text-white/60">Doações &gt; Estoque</div>
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">
-          Estoque de Produtos
-        </h2>
-        <Button variant="primary" className="text-base" onPress={() => setIsModalOpen(true)}>
-          <Plus />
-          Novo Produto
-          
+        <h2 className="text-3xl font-bold text-white">Estoque de Doações</h2>
+        <Button
+          className="bg-btn-primary text-white font-bold text-base px-5 shadow-md hover:opacity-90 transition-opacity"
+          onPress={() => setIsModalOpen(true)}
+        >
+          <Plus size={18} />
+          Nova Doação
         </Button>
       </div>
 
       {erro && (
-        <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded-md shadow-sm flex justify-between">
-          {erro}
-          <button onClick={() => setErro("")}>
-            <X size={20} />
-          </button>
+        <div className="bg-red-900/50 border-l-4 border-red-500 text-red-200 p-4 mb-6 rounded-md shadow-sm flex justify-between items-center">
+          <span>{erro}</span>
+          <button onClick={() => setErro("")} className="hover:text-white"><X size={20} /></button>
         </div>
       )}
 
-      {/* Tabela */}
       {loading ? (
-        <div className="p-8 text-center text-gray-500 font-medium">
-          Carregando dados do servidor...
-        </div>
+        <div className="p-12 text-center text-white/60 font-medium">Carregando dados do servidor...</div>
       ) : produtos.length === 0 ? (
-        <div className="p-8 text-center text-gray-500 font-medium bg-white rounded-xl shadow-sm border border-gray-100">
+        <div className="p-12 text-center text-text-main bg-bg-card rounded-xl shadow-xl">
           Nenhum produto cadastrado ainda.
         </div>
       ) : (
-        <Table
-          aria-label="Tabela de gestão de produtos"
-          className="bg-white shadow-sm rounded-xl border border-gray-100"
-        >
+        <Table aria-label="Tabela de gestão de produtos" className="bg-bg-card text-text-main shadow-xl rounded-xl overflow-hidden">
           <Table.ScrollContainer>
             <Table.Content>
               <Table.Header>
-                <Table.Column isRowHeader className="w-[20%]">NOME</Table.Column>
-                <Table.Column className="w-[20%]">CATEGORIA</Table.Column>
-                <Table.Column className="w-[15%]">UNIDADE</Table.Column>
-                <Table.Column className="w-[15%]">STATUS</Table.Column>
-                <Table.Column className="w-[10%]">AÇÕES</Table.Column>
+                <Table.Column isRowHeader className="bg-black/5 text-text-main font-bold">NOME</Table.Column>
+                <Table.Column className="bg-black/5 text-text-main font-bold">CATEGORIA</Table.Column>
+                <Table.Column className="bg-black/5 text-text-main font-bold">UNIDADE</Table.Column>
+                <Table.Column className="bg-black/5 text-text-main font-bold">STATUS</Table.Column>
+                <Table.Column className="bg-black/5 text-text-main font-bold text-center">AÇÕES</Table.Column>
               </Table.Header>
 
               <Table.Body>
                 {produtos.map((produto) => (
-                  <Table.Row id={produto.id?.toString()} key={produto.id}>
-                    <Table.Cell className="font-medium text-base">
-                      {produto.nome}
-                    </Table.Cell>
-                    <Table.Cell className="text-base">{produto.categoria}</Table.Cell>
-                    <Table.Cell className="capitalize text-base">
-                      {produto.unidade}
-                    </Table.Cell>
+                  <Table.Row key={produto.id} className="border-b border-black/5 hover:bg-black/[0.02]">
+                    <Table.Cell className="font-semibold text-base text-text-main">{produto.nome}</Table.Cell>
+                    <Table.Cell className="text-base text-text-main/80">{produto.categoria}</Table.Cell>
+                    <Table.Cell className="capitalize text-base text-text-main/80">{produto.unidade}</Table.Cell>
                     <Table.Cell>
-                      <span
-                        className={`px-2 py-1 rounded-md text-sm font-bold ${produto.ativo ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}
-                      >
+                      <span className={`px-2 py-1 rounded-md text-xs font-bold ${produto.ativo ? "bg-green-200 text-green-800" : "bg-red-200 text-red-800"}`}>
                         {produto.ativo ? "Ativo" : "Inativo"}
                       </span>
                     </Table.Cell>
                     <Table.Cell>
-                      <div className="flex gap-2 items-center">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onPress={() => produto.id && handleVer(produto.id)}
-                          isDisabled={actionLoading === produto.id}
-                        >
-                          Ver
+                      <div className="flex gap-2 items-center justify-center">
+                        <Button size="sm" className="bg-black/5 text-text-main hover:bg-black/10" onPress={() => produto.id && handleVer(produto.id)}>Lotes</Button>
+                        <Button size="sm" className="bg-black/5 text-text-main hover:bg-black/10" onPress={() => handleEditar(produto)}>Editar</Button>
+                        <Button size="sm" className={`min-w-[85px] ${produto.ativo ? 'bg-black/5 text-text-main hover:bg-black/10' : 'bg-black/5 text-text-main hover:bg-black/10'}`} onPress={() => handleToggleAtivo(produto)}>
+                          {actionLoading === produto.id ? "..." : produto.ativo ? "Desativar" : "Ativar"}
                         </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onPress={() => handleEditar(produto)}
-                          isDisabled={actionLoading === produto.id}
-                        >
-                          Editar
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onPress={() => handleToggleAtivo(produto)}
-                          isDisabled={actionLoading === produto.id}
-                          className="min-w-[85px]"
-                        >
-                          {actionLoading === produto.id
-                            ? "..."
-                            : produto.ativo
-                              ? "Desativar"
-                              : "Ativar"}
-                        </Button>
-                        <Button
-                          isIconOnly
-                          size="sm"
-                          variant="danger"
-                          onPress={() =>
-                            produto.id && handleExcluir(produto.id)
-                          }
-                          isDisabled={actionLoading === produto.id}
-                        >
+                        <Button isIconOnly size="sm" className="bg-red-100 text-red-600 hover:bg-red-200" onPress={() => produto.id && handleExcluir(produto.id)}>
                           <TrashBin />
                         </Button>
                       </div>
@@ -237,96 +178,40 @@ export function Produtos() {
         </Table>
       )}
 
-      {/* Modal Reutilizável (Cadastro / Edição) */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-lg w-full max-w-md overflow-hidden">
-            <div className="flex justify-between items-center p-4 border-b border-gray-100">
-              <h3 className="text-lg font-bold text-gray-800">
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+          <div className="bg-bg-card text-text-main rounded-xl shadow-2xl w-full max-w-md overflow-hidden border border-white/10">
+            <div className="flex justify-between items-center p-5 border-b border-black/10 bg-black/5">
+              <h3 className="text-lg font-bold text-brand">
                 {editingProdutoId ? "Editar Produto" : "Cadastrar Novo Produto"}
               </h3>
-              <button
-                onClick={handleFecharModal}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <X size={20} />
-              </button>
+              <button onClick={handleFecharModal} className="text-text-main/60 hover:text-text-main"><X size={20} /></button>
             </div>
 
-            <form
-              onSubmit={handleSalvarProduto}
-              className="p-4 flex flex-col gap-4"
-            >
+            <form onSubmit={handleSalvarProduto} className="p-6 flex flex-col gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Nome do Produto
-                </label>
-                <input
-                  required
-                  type="text"
-                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  placeholder="Ex: Arroz Branco"
-                  value={novoProduto.nome}
-                  onChange={(e) =>
-                    setNovoProduto({ ...novoProduto, nome: e.target.value })
-                  }
-                />
+                <label className="block text-sm font-bold text-text-main mb-1">Nome do Produto</label>
+                <input required type="text" className="w-full p-2.5 bg-white border border-black/10 rounded-lg text-text-main focus:ring-2 focus:ring-brand focus:outline-none" placeholder="Ex: Arroz Branco" value={novoProduto.nome} onChange={(e) => setNovoProduto({ ...novoProduto, nome: e.target.value })} />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Categoria
-                </label>
-                <input
-                  required
-                  type="text"
-                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  placeholder="Ex: Grãos"
-                  value={novoProduto.categoria}
-                  onChange={(e) =>
-                    setNovoProduto({
-                      ...novoProduto,
-                      categoria: e.target.value,
-                    })
-                  }
-                />
+                <label className="block text-sm font-bold text-text-main mb-1">Categoria</label>
+                <input required type="text" className="w-full p-2.5 bg-white border border-black/10 rounded-lg text-text-main focus:ring-2 focus:ring-brand focus:outline-none" placeholder="Ex: Grãos" value={novoProduto.categoria} onChange={(e) => setNovoProduto({ ...novoProduto, categoria: e.target.value })} />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Unidade de Medida
-                </label>
-                <select
-                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white"
-                  value={novoProduto.unidade}
-                  onChange={(e) =>
-                    setNovoProduto({ ...novoProduto, unidade: e.target.value })
-                  }
-                >
+                <label className="block text-sm font-bold text-text-main mb-1">Unidade de Medida</label>
+                <select className="w-full p-2.5 bg-white border border-black/10 rounded-lg text-text-main focus:ring-2 focus:ring-brand focus:outline-none" value={novoProduto.unidade} onChange={(e) => setNovoProduto({ ...novoProduto, unidade: e.target.value })}>
                   <option value="kg">Quilograma (kg)</option>
                   <option value="litro">Litro (L)</option>
                   <option value="unidade">Unidade (un)</option>
                 </select>
               </div>
 
-              <div className="flex justify-end gap-2 mt-4">
-                <Button
-                  variant="secondary"
-                  onPress={handleFecharModal}
-                  type="button"
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  variant="primary"
-                  type="submit"
-                  isDisabled={isSubmitting}
-                >
-                  {isSubmitting
-                    ? "Salvando..."
-                    : editingProdutoId
-                      ? "Atualizar Produto"
-                      : "Salvar Produto"}
+              <div className="flex justify-end gap-3 mt-6">
+                <Button className="bg-btn-cancel text-white font-bold px-5 shadow-md hover:opacity-80 transition-opacity" onPress={handleFecharModal} type="button">Cancelar</Button>
+                <Button className="bg-btn-primary text-white font-bold px-5 shadow-md hover:opacity-90 transition-opacity" type="submit" isDisabled={isSubmitting}>
+                  {isSubmitting ? "Salvando..." : editingProdutoId ? "Atualizar" : "Salvar Produto"}
                 </Button>
               </div>
             </form>

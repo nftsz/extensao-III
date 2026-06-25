@@ -1,2 +1,40 @@
 @import "tailwindcss";
 @import "@heroui/styles";
+@import url('https://fonts.googleapis.com/css2?family=Cherry+Swash:wght@400;700&display=swap');
+
+@theme {
+  /* =========================================
+     PALETA DE CORES (Baseada no Layout)
+     ========================================= */
+  
+  /* Fundos */
+  --color-bg-dark: #370A10;    /* Fundo principal escuro (vinho/marrom) */
+  --color-bg-sidebar: #E8DCC8; /* Fundo do menu lateral (bege escuro) */
+  --color-bg-card: #F1E5D5;    /* Fundo do formulário (bege claro) */
+  --color-bg-notice: #5F333A;  /* Fundo da barra de aviso superior */
+  
+  /* Botões e Destaques */
+  --color-brand: #752026;      /* Cor da Logo (Donare) e ícones ativos */
+  --color-btn-primary: #D16B6B;  /* Botão "Cadastrar" (Coral) */
+  --color-btn-cancel: #A3918D;   /* Botão "Cancelar" (Marrom acinzentado) */
+  
+  /* Textos e Bordas */
+  --color-text-main: #333333;  /* Textos dos menus e labels */
+  --color-text-muted: #9CA3AF; /* Placeholder dos inputs */
+  --color-border-input: #D1D5DB; 
+
+  /* =========================================
+     FONTES
+     ========================================= */
+  --font-brand: 'Cherry Swash', serif; /* Para usar na logo: font-brand */
+  --font-sans: ui-sans-serif, system-ui, sans-serif; 
+}
+
+/* Aplicando estilos globais básicos para o body */
+@layer base {
+  body {
+    background-color: var(--color-bg-dark);
+    color: var(--color-text-main);
+    font-family: var(--font-sans);
+  }
+}

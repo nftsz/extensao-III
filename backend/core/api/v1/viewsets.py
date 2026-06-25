@@ -22,8 +22,13 @@ class ProdutoViewSet(viewsets.ModelViewSet):
 class LoteDoacaoViewSet(viewsets.ModelViewSet):
     queryset = LoteDoacao.objects.all()
     serializer_class = LoteDoacaoSerializer
-    
 
+    def get_queryset(self):
+        queryset = LoteDoacao.objects.all()
+        produto_id = self.request.query_params.get('produto')
+        if produto_id is not None:
+            queryset = queryset.filter(produto_id=produto_id)
+        return queryset
 
 class PercaViewSet(viewsets.ModelViewSet):
     queryset = Perca.objects.all()
